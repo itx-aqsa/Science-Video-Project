@@ -16,17 +16,13 @@ load_dotenv()
 # Set API keys
 Groq_API = os.getenv("Groq_API_Key")
 client = Groq(api_key=Groq_API)
-
 GOOGLE_TRANSLATE_API_KEY = os.getenv("Google_API")
-
 
 def fetch_wikipedia_summary(topic):
     wiki_wiki = wikipediaapi.Wikipedia(user_agent="EducationalScriptApp/1.0", language="en")
     page = wiki_wiki.page(topic)
-
     if page.exists():
         return page.summary
-
     try:
         search_results = wikipedia.search(topic, results=3)
         for related_topic in search_results:
@@ -37,18 +33,18 @@ def fetch_wikipedia_summary(topic):
     except:
         return None
 
-
 def generate_script(topic, duration):
     factual_content = fetch_wikipedia_summary(topic)
     words_per_minute = 130
     target_words = duration * words_per_minute
+    
     if factual_content:
-         # Wikipedia content available, format it into a script
-         prompt = f"Format the following factual content into an educational script in English with approximately {target_words} words. Do not include extra text like 'Here is the formatted script' or descriptions.\n\n{factual_content}"
+        # Wikipedia content available, format it into a script
+        prompt = f"Format the following factual content into an educational script in English with approximately {target_words} words. Do not include extra text like 'Here is the formatted script' or descriptions.\n\n{factual_content}"
     else:
         # No Wikipedia content, generate a script directly
         prompt = f"Generate an educational script in English on the topic '{topic}' with approximately {target_words} words. Ensure the content is factual, engaging, and suitable for an educational video. Do not include extra text like 'Here is the formatted script' or descriptions."
-
+    
     response = client.chat.completions.create(
         messages=[
             {"role": "system", "content": "You are an AI assistant that creates structured educational scripts. Start directly with the script content, focusing on the topic. Do NOT include introductory phrases, word counts, or metadata."},
@@ -56,13 +52,69 @@ def generate_script(topic, duration):
         ],
         model="llama3-70b-8192"
     )
-
+    
     script = response.choices[0].message.content.strip()
     script = script.replace("**", "").replace("*", "").replace("###", "").replace("##", "").replace("#", "")
-    return script       
-        
+    return script
+
+def generate_video_script_direct(topic, duration):
+    """
+    Generate a video-optimized script directly without first creating a regular script
+    """
+    factual_content = fetch_wikipedia_summary(topic)
+    words_per_minute = 130
+    target_words = duration * words_per_minute
+    
+    if factual_content:
+        # Wikipedia content available, format it into a video script
+        prompt = f"""Create a video-optimized educational script about '{topic}' with approximately {target_words} words.
+
+Use this factual content as reference:
+{factual_content}
+
+Format the script with:
+- Clear scene descriptions in [brackets]
+- Visual cues and suggestions
+- Engaging narration suitable for video
+- Smooth transitions between topics
+- Call-to-action elements
+
+Do not include extra text like 'Here is the video script' or descriptions."""
+    else:
+        # No Wikipedia content, generate a video script directly
+        prompt = f"""Create a video-optimized educational script about '{topic}' with approximately {target_words} words.
+
+Format the script with:
+- Clear scene descriptions in [brackets]
+- Visual cues and suggestions for graphics/animations
+- Engaging narration suitable for video presentation
+- Smooth transitions between sections
+- Hook at the beginning and call-to-action at the end
+- Factual, educational content
+
+Do not include extra text like 'Here is the video script' or descriptions."""
+    
+    response = client.chat.completions.create(
+        messages=[
+            {"role": "system", "content": "You are an AI assistant specialized in creating video scripts for educational content. Create engaging, visual-friendly scripts with scene descriptions, visual cues, and smooth narration flow. Start directly with the script content."},
+            {"role": "user", "content": prompt}
+        ],
+        model="llama3-70b-8192",
+        temperature=0.7  # Slightly higher creativity for video content
+    )
+    
+    video_script = response.choices[0].message.content.strip()
+    
+    # Clean up formatting but keep video-specific elements like [brackets]
+    video_script = video_script.replace("**", "").replace("*", "").replace("###", "").replace("##", "").replace("#", "")
+    
+    return video_script
 
 def generate_video_script(script_content):
+    """
+    Legacy function - converts existing script to video format
+    This is kept for backward compatibility but not used in the new flow
+    """
     response = client.chat.completions.create(
         messages=[
             {"role": "system", "content": "You are an AI assistant that converts educational text into video scene descriptions."},
@@ -72,14 +124,13 @@ def generate_video_script(script_content):
     )
     return response.choices[0].message.content.strip()
 
-
 def translate_script(script_content, target_language):
     """
     Translate script using multiple methods - Google API with fallback to Groq AI
     """
     if not script_content:
         return "⚠️ No valid script content to translate."
-
+    
     # Language mapping for Google Translate API
     language_map = {
         "chinese-simplified": "zh-cn",
@@ -108,7 +159,6 @@ def translate_script(script_content, target_language):
     except Exception as e:
         print(f"❌ Groq AI translation failed: {str(e)}")
         return f"❌ Translation failed for {target_language}. Please try again later."
-
 
 def translate_with_groq_ai(script_content, target_language):
     """
@@ -146,7 +196,7 @@ def translate_with_groq_ai(script_content, target_language):
 
         Text to translate:
         {chunk}"""
-
+        
         response = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": f"You are a professional translator specializing in educational content. Translate accurately to {target_lang_name} while maintaining the original structure and educational tone. Provide only the translation."},
@@ -155,7 +205,7 @@ def translate_with_groq_ai(script_content, target_language):
             model="llama3-70b-8192",
             temperature=0.3  # Lower temperature for more consistent translation
         )
-
+        
         translated_chunk = response.choices[0].message.content.strip()
         translated_chunks.append(translated_chunk)
     
@@ -166,7 +216,6 @@ def translate_with_groq_ai(script_content, target_language):
     full_translation += f"\n\n---\n*Translated to {target_lang_name} using AI*"
     
     return full_translation
-
 
 def split_text_into_chunks(text, max_length=2000):
     """
@@ -191,7 +240,6 @@ def split_text_into_chunks(text, max_length=2000):
         chunks.append(current_chunk.strip())
     
     return chunks
-
 
 def extract_text_from_file(file_content, filename, content_type):
     """
@@ -261,7 +309,6 @@ def extract_text_from_file(file_content, filename, content_type):
         print(f"❌ Text extraction error: {str(e)}")
         return f"Error extracting text: {str(e)}"
 
-
 def text_to_speech_from_content(text_content):
     """
     Convert text content directly to speech and return audio data
@@ -295,7 +342,6 @@ def text_to_speech_from_content(text_content):
         print(f"❌ TTS error: {str(e)}")
         return f"TTS Error: {str(e)}", None
 
-
 def extract_text(file):
     """
     Legacy function for backward compatibility
@@ -327,7 +373,6 @@ def extract_text(file):
     except Exception as e:
         print(f"❌ Legacy extract_text error: {str(e)}")
         raise ValueError(f"Error extracting text from file: {str(e)}")
-
 
 def text_to_speech(file):
     """

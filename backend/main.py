@@ -8,10 +8,9 @@ import tempfile
 import io
 import os
 import uuid
-
 from core_logic import (
     generate_script, 
-    generate_video_script, 
+    generate_video_script_direct,  # New function for direct video script generation
     translate_script, 
     text_to_speech,
     extract_text_from_file,
@@ -56,7 +55,10 @@ class ScriptRequest(BaseModel):
     language: str = "english"
 
 class VideoScriptRequest(BaseModel):
-    script_content: str
+    topic: str
+    duration: int
+    audience_level: str = "general"
+    language: str = "english"
 
 class TranslationRequest(BaseModel):
     text: str
@@ -71,7 +73,6 @@ class TextToSpeechRequest(BaseModel):
     language: str = "en"
 
 # API Endpoints
-
 @app.get("/")
 async def root():
     return {
@@ -125,18 +126,18 @@ async def generate_script_api(data: ScriptRequest):
         raise HTTPException(status_code=500, detail=f"Script generation failed: {str(e)}")
 
 @app.post("/generate-video-script")
-async def generate_video_script_api(data: ScriptRequest):
+async def generate_video_script_api(data: VideoScriptRequest):
     try:
-        print("🎬 Generating video-optimized script...")
+        print("🎬 Generating video-optimized script directly...")
         
         if not data.topic.strip():
             raise HTTPException(status_code=400, detail="Topic cannot be empty")
         
-        # First generate a regular script
-        regular_script = generate_script(data.topic, data.duration)
+        if data.duration < 1 or data.duration > 60:
+            raise HTTPException(status_code=400, detail="Duration must be between 1 and 60 minutes")
         
-        # Then convert it to video format
-        video_script = generate_video_script(regular_script)
+        # Generate video script directly without regular script first
+        video_script = generate_video_script_direct(data.topic, data.duration)
         word_count = len(video_script.split())
         
         return {
@@ -144,6 +145,7 @@ async def generate_video_script_api(data: ScriptRequest):
             "script": video_script,
             "word_count": word_count,
             "estimated_duration": f"{data.duration} minutes (video format)",
+            "script_type": "video_optimized",
             "generated_at": datetime.now().isoformat()
         }
         

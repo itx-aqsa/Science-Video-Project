@@ -7,10 +7,12 @@ import Footer from "@/components/footer"
 export default function ScriptGenerator() {
   const [topic, setTopic] = useState("")
   const [duration, setDuration] = useState("5")
-  const [generatedScript, setGeneratedScript] = useState("")
+  const [generatedScript, setGeneratedScript] = useState("") // Regular script
+  const [videoScript, setVideoScript] = useState("") // Video script - separate state
   const [selectedLanguage, setSelectedLanguage] = useState("chinese-simplified")
   const [translatedScript, setTranslatedScript] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isVideoLoading, setIsVideoLoading] = useState(false) // Separate loading for video
   const [isTranslating, setIsTranslating] = useState(false)
 
   const handleGenerateScript = async () => {
@@ -21,7 +23,6 @@ export default function ScriptGenerator() {
 
     console.log("🚀 Starting API call to backend...")
     setIsLoading(true)
-
     try {
       console.log("📡 Making API request to: http://localhost:8000/generate-script")
       console.log("📝 Request data:", {
@@ -55,29 +56,24 @@ export default function ScriptGenerator() {
 
       const data = await response.json()
       console.log("✅ API Response received:", data)
-
-      setGeneratedScript(data.script)
+      setGeneratedScript(data.script) // Only set regular script
       console.log("✅ Script set successfully!")
-
-      // Show success message
       alert("✅ Script generated successfully using AI!")
     } catch (error: unknown) {
-  console.error("❌ Error generating script:", error)
+      console.error("❌ Error generating script:", error)
+      if (error instanceof Error) {
+        if (error.message.includes("fetch")) {
+          alert("❌ Cannot connect to backend server. Make sure backend is running on http://localhost:8000")
+        } else {
+          alert(`❌ Error: ${error.message}`)
+        }
+      } else {
+        alert("❌ Unknown error occurred while generating the script.")
+      }
 
-  // Show detailed error to user
-  if (error instanceof Error) {
-    if (error.message.includes("fetch")) {
-      alert("❌ Cannot connect to backend server. Make sure backend is running on http://localhost:8000")
-    } else {
-      alert(`❌ Error: ${error.message}`)
-    }
-  } else {
-    alert("❌ Unknown error occurred while generating the script.")
-  }
-
-  // Fallback to dummy content for demo
-  console.log("🔄 Using fallback dummy content...")
-  const dummyScript = `# Educational Script: ${topic}
+      // Fallback to dummy content for demo
+      console.log("🔄 Using fallback dummy content...")
+      const dummyScript = `# Educational Script: ${topic}
 
 ## Introduction
 Welcome to our educational content about ${topic}. This is a ${duration}-minute educational script.
@@ -108,6 +104,7 @@ This script is designed to be engaging and informative for learners of all level
     setTopic("")
     setDuration("5")
     setGeneratedScript("")
+    setVideoScript("") // Clear video script too
     setTranslatedScript("")
   }
 
@@ -124,8 +121,23 @@ This script is designed to be engaging and informative for learners of all level
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
-
     console.log("📥 Script downloaded")
+  }
+
+  const handleDownloadVideoScript = () => {
+    if (!videoScript) {
+      alert("No video script to download!")
+      return
+    }
+
+    const element = document.createElement("a")
+    const file = new Blob([videoScript], { type: "text/plain" })
+    element.href = URL.createObjectURL(file)
+    element.download = `${topic.replace(/\s+/g, "_")}_video_script.txt`
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+    console.log("📥 Video script downloaded")
   }
 
   const handleGenerateForVideo = async () => {
@@ -135,8 +147,7 @@ This script is designed to be engaging and informative for learners of all level
     }
 
     console.log("🎬 Generating video-optimized script...")
-    setIsLoading(true)
-
+    setIsVideoLoading(true) // Separate loading state
     try {
       const response = await fetch("http://localhost:8000/generate-video-script", {
         method: "POST",
@@ -144,10 +155,10 @@ This script is designed to be engaging and informative for learners of all level
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          topic: topic, // Send topic instead of script_content
-          duration: Number.parseInt(duration), // Send duration
-          audience_level: "general", // Add audience_level
-          language: "english", // Add language
+          topic: topic,
+          duration: Number.parseInt(duration),
+          audience_level: "general",
+          language: "english",
         }),
       })
 
@@ -156,14 +167,46 @@ This script is designed to be engaging and informative for learners of all level
       }
 
       const data = await response.json()
-      setGeneratedScript(data.script)
+      setVideoScript(data.script) // Set video script separately
       console.log("✅ Video script generated successfully")
       alert("✅ Video-optimized script generated!")
     } catch (error) {
       console.error("❌ Error generating video script:", error)
       alert("❌ Failed to generate video script. Please try again.")
+
+      // Fallback video script
+      const dummyVideoScript = `# Video Script: ${topic}
+
+[SCENE 1: Opening Hook]
+[Visual: Engaging title animation with topic name]
+Narrator: "Welcome to today's educational journey about ${topic}!"
+
+[SCENE 2: Introduction]
+[Visual: Clean background with key topic elements]
+Narrator: "In the next ${duration} minutes, we'll explore the fascinating world of ${topic}."
+
+[SCENE 3: Main Content]
+[Visual: Animated graphics showing key concepts]
+Narrator: "Let's dive into the core concepts..."
+
+[SCENE 4: Examples]
+[Visual: Real-world examples and case studies]
+Narrator: "Here are some practical applications..."
+
+[SCENE 5: Conclusion]
+[Visual: Summary graphics with key takeaways]
+Narrator: "To summarize what we've learned today..."
+
+[SCENE 6: Call to Action]
+[Visual: Subscribe/like buttons and related content]
+Narrator: "Thanks for watching! Don't forget to subscribe for more educational content."
+
+---
+*[DEMO MODE - This is a sample video script format]*`
+
+      setVideoScript(dummyVideoScript)
     } finally {
-      setIsLoading(false)
+      setIsVideoLoading(false)
     }
   }
 
@@ -175,7 +218,6 @@ This script is designed to be engaging and informative for learners of all level
 
     console.log(`🌐 Translating script to ${selectedLanguage}...`)
     setIsTranslating(true)
-
     try {
       const response = await fetch("http://localhost:8000/translate-script", {
         method: "POST",
@@ -218,7 +260,6 @@ This script is designed to be engaging and informative for learners of all level
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
-
     console.log("📥 Translation downloaded")
   }
 
@@ -301,7 +342,6 @@ This script is designed to be engaging and informative for learners of all level
                         Be specific for better results. Include key aspects you want covered.
                       </div>
                     </div>
-
                     <div className="col-md-4 mb-3">
                       <label htmlFor="durationSelect" className="form-label fw-semibold">
                         <i className="fas fa-clock me-2 text-info"></i>
@@ -321,7 +361,6 @@ This script is designed to be engaging and informative for learners of all level
                       </select>
                     </div>
                   </div>
-
                   <div className="row">
                     <div className="col-12">
                       <div className="d-flex flex-column flex-md-row gap-3">
@@ -346,6 +385,29 @@ This script is designed to be engaging and informative for learners of all level
                             </>
                           )}
                         </button>
+
+                        <button
+                          className="btn btn-success btn-lg px-4"
+                          onClick={handleGenerateForVideo}
+                          disabled={!topic.trim() || isVideoLoading}
+                        >
+                          {isVideoLoading ? (
+                            <>
+                              <span
+                                className="spinner-border spinner-border-sm me-2"
+                                role="status"
+                                aria-hidden="true"
+                              ></span>
+                              Generating Video Script...
+                            </>
+                          ) : (
+                            <>
+                              <i className="fas fa-video me-2"></i>
+                              Generate Video Script
+                            </>
+                          )}
+                        </button>
+
                         <button className="btn btn-outline-secondary btn-lg px-4" onClick={handleClearAll}>
                           <i className="fas fa-trash me-2"></i>
                           Clear All Content
@@ -358,46 +420,70 @@ This script is designed to be engaging and informative for learners of all level
             </div>
           </div>
 
-          {/* Generated Script Display */}
-          {generatedScript && (
-            <div className="row mb-4">
-              <div className="col-12">
-                <div className="card border-0 shadow-sm">
-                  <div className="card-header bg-success text-white">
+          {/* Scripts Display - Side by Side */}
+          <div className="row mb-4">
+            {/* Regular Script */}
+            {generatedScript && (
+              <div className="col-lg-6 mb-4">
+                <div className="card border-0 shadow-sm h-100">
+                  <div className="card-header bg-primary text-white">
                     <h5 className="card-title mb-0">
                       <i className="fas fa-file-alt me-2"></i>
-                      Generated Script
+                      Regular Educational Script
                     </h5>
                   </div>
                   <div className="card-body p-4">
                     <div className="bg-light border rounded p-4 mb-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
-                      <pre className="mb-0" style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: "1rem" }}>
+                      <pre
+                        className="mb-0"
+                        style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: "0.95rem" }}
+                      >
                         {generatedScript}
                       </pre>
                     </div>
-
-                    {/* Post-Generation Buttons */}
-                    <div className="row">
-                      <div className="col-12">
-                        <div className="d-flex flex-column flex-md-row gap-3">
-                          <button className="btn btn-outline-primary btn-lg px-4" onClick={handleDownloadScript}>
-                            <i className="fas fa-download me-2"></i>
-                            Download Script
-                          </button>
-                          <button className="btn btn-outline-success btn-lg px-4" onClick={handleGenerateForVideo}>
-                            <i className="fas fa-video me-2"></i>
-                            Optimize for Video
-                          </button>
-                        </div>
-                      </div>
+                    <div className="d-flex gap-2">
+                      <button className="btn btn-outline-primary btn-sm" onClick={handleDownloadScript}>
+                        <i className="fas fa-download me-2"></i>
+                        Download
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Translation Section */}
+            {/* Video Script */}
+            {videoScript && (
+              <div className="col-lg-6 mb-4">
+                <div className="card border-0 shadow-sm h-100">
+                  <div className="card-header bg-success text-white">
+                    <h5 className="card-title mb-0">
+                      <i className="fas fa-video me-2"></i>
+                      Video Production Script
+                    </h5>
+                  </div>
+                  <div className="card-body p-4">
+                    <div className="bg-light border rounded p-4 mb-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
+                      <pre
+                        className="mb-0"
+                        style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: "0.95rem" }}
+                      >
+                        {videoScript}
+                      </pre>
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button className="btn btn-outline-success btn-sm" onClick={handleDownloadVideoScript}>
+                        <i className="fas fa-download me-2"></i>
+                        Download Video Script
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Translation Section - Only show if regular script exists */}
           {generatedScript && (
             <div className="row mb-4">
               <div className="col-12">
@@ -405,7 +491,7 @@ This script is designed to be engaging and informative for learners of all level
                   <div className="card-header bg-info text-white">
                     <h3 className="card-title mb-0">
                       <i className="fas fa-globe me-2"></i>
-                      Translate Script
+                      Translate Regular Script
                     </h3>
                   </div>
                   <div className="card-body p-4">
@@ -429,7 +515,6 @@ This script is designed to be engaging and informative for learners of all level
                         </select>
                       </div>
                     </div>
-
                     <div className="d-flex flex-column flex-md-row gap-3 mb-4">
                       <button
                         className="btn btn-info btn-lg px-4"
@@ -459,7 +544,6 @@ This script is designed to be engaging and informative for learners of all level
                         </button>
                       )}
                     </div>
-
                     {/* Translated Script Display */}
                     {translatedScript && (
                       <div className="bg-light border rounded p-4" style={{ maxHeight: "400px", overflowY: "auto" }}>
@@ -487,7 +571,7 @@ This script is designed to be engaging and informative for learners of all level
           )}
 
           {/* Help Section */}
-          {!generatedScript && (
+          {!generatedScript && !videoScript && (
             <div className="row">
               <div className="col-12">
                 <div className="card border-info border-2">
@@ -521,7 +605,7 @@ This script is designed to be engaging and informative for learners of all level
                           </li>
                           <li className="mb-2">
                             <i className="fas fa-check text-success me-2"></i>
-                            Review and customize output
+                            Generate both script types for different uses
                           </li>
                           <li className="mb-2">
                             <i className="fas fa-check text-success me-2"></i>
