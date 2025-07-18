@@ -14,21 +14,21 @@ export default function AboutPage() {
   const team = [
     {
       name: "Qadeer Qureshi",
-      role: "........",
-      image: "/placeholder.svg?height=200&width=200",
-      bio: "........................................",
+      role: "Concept, architecture, planning",
+      image: "/boy.jpg?height=200&width=200",
+      // bio: "........................................",
     },
     {
       name: "Muhammad Ehtisham",
-      role: "........",
-      image: "/placeholder.svg?height=200&width=200",
-      bio: "........................................",
+      role: "Research, APIs, backend, integration",
+      image: "/boy.jpg?height=200&width=200",
+      // bio: "........................................",
     },
     {
       name: "Aqsa Mahmood",
-      role: ".......",
-      image: "/placeholder.svg?height=200&width=200",
-      bio: "........................................",
+      role: "Front end design, integration",
+      image: "/girl.jpg?height=200&width=200",
+      // bio: "........................................",
     },
   ]
 
@@ -174,7 +174,7 @@ export default function AboutPage() {
                         />
                         <h5 className="fw-bold mb-1">{member.name}</h5>
                         <p className="text-primary fw-medium mb-3">{member.role}</p>
-                        <p className="text-muted small">{member.bio}</p>
+                        {/* <p className="text-muted small">{member.bio}</p> */}
                       </div>
                     </div>
                   </div>
