@@ -31,7 +31,7 @@ export default function TextToSpeech() {
       const formData = new FormData()
       formData.append("file", file)
 
-      const response = await fetch("http://localhost:8000/upload-document", {
+      const response = await fetch("https://content-generation-and-translation.streamlit.app/upload-document", {
         method: "POST",
         body: formData,
       })
@@ -63,7 +63,7 @@ export default function TextToSpeech() {
 
     setIsProcessing(true)
     try {
-      const response = await fetch("http://localhost:8000/text-to-speech", {
+      const response = await fetch("https://content-generation-and-translation.streamlit.app/text-to-speech", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +83,7 @@ export default function TextToSpeech() {
 
       const data = await response.json()
       setAudioGenerated(true)
-      setGeneratedAudioUrl(`http://localhost:8000${data.audio_url}`)
+      setGeneratedAudioUrl(`https://content-generation-and-translation.streamlit.app/${data.audio_url}`)
       setAudioId(data.audio_id)
       setAudioInfo((prev) => ({
         ...prev,
@@ -92,7 +92,7 @@ export default function TextToSpeech() {
       }))
 
       console.log("✅ Audio generated successfully")
-      console.log("🎵 Audio URL:", `http://localhost:8000${data.audio_url}`)
+      console.log("🎵 Audio URL:", `https://content-generation-and-translation.streamlit.app/${data.audio_url}`)
     } catch (error) {
       console.error("❌ Error generating audio:", error)
       alert("Failed to generate audio. Please try again.")
@@ -119,7 +119,7 @@ export default function TextToSpeech() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/download-audio/${audioId}`)
+      const response = await fetch(`https://content-generation-and-translation.streamlit.app/download-audio/${audioId}`)
 
       if (!response.ok) {
         throw new Error("Failed to download audio")

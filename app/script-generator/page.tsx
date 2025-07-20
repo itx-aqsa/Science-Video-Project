@@ -24,7 +24,7 @@ export default function ScriptGenerator() {
     console.log("🚀 Starting API call to backend...")
     setIsLoading(true)
     try {
-      console.log("📡 Making API request to: http://localhost:8000/generate-script")
+      console.log("📡 Making API request to: https://content-generation-and-translation.streamlit.app/generate-script")
       console.log("📝 Request data:", {
         topic: topic,
         duration: Number.parseInt(duration),
@@ -32,7 +32,7 @@ export default function ScriptGenerator() {
         language: "english",
       })
 
-      const response = await fetch("http://localhost:8000/generate-script", {
+      const response = await fetch("https://content-generation-and-translation.streamlit.app/generate-script", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +63,7 @@ export default function ScriptGenerator() {
       console.error("❌ Error generating script:", error)
       if (error instanceof Error) {
         if (error.message.includes("fetch")) {
-          alert("❌ Cannot connect to backend server. Make sure backend is running on http://localhost:8000")
+          alert("❌ Cannot connect to backend server. Make sure backend is running on https://content-generation-and-translation.streamlit.app/")
         } else {
           alert(`❌ Error: ${error.message}`)
         }
@@ -149,7 +149,7 @@ This script is designed to be engaging and informative for learners of all level
     console.log("🎬 Generating video-optimized script...")
     setIsVideoLoading(true) // Separate loading state
     try {
-      const response = await fetch("http://localhost:8000/generate-video-script", {
+      const response = await fetch("https://content-generation-and-translation.streamlit.app/generate-video-script", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -219,7 +219,7 @@ Narrator: "Thanks for watching! Don't forget to subscribe for more educational c
     console.log(`🌐 Translating script to ${selectedLanguage}...`)
     setIsTranslating(true)
     try {
-      const response = await fetch("http://localhost:8000/translate-script", {
+      const response = await fetch("https://content-generation-and-translation.streamlit.app/translate-script", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -296,11 +296,11 @@ Narrator: "Thanks for watching! Don't forget to subscribe for more educational c
               <div className="alert alert-info">
                 <i className="fas fa-info-circle me-2"></i>
                 <strong>Backend Status:</strong> Make sure your FastAPI backend is running on
-                <code className="ms-1">http://localhost:8000</code>
+                <code className="ms-1">https://content-generation-and-translation.streamlit.app/</code>
                 <button
                   className="btn btn-sm btn-outline-primary ms-3"
                   onClick={() => {
-                    fetch("http://localhost:8000/health")
+                    fetch("https://content-generation-and-translation.streamlit.app/health")
                       .then((res) => res.json())
                       .then((data) => alert(`✅ Backend is running! ${data.message}`))
                       .catch((err) => alert("❌ Backend is not running! Please start the FastAPI server."))

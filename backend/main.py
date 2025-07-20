@@ -353,8 +353,8 @@ async def options_handler():
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting EduAI Pro FastAPI Server...")
-    print("📍 Server will be available at: http://localhost:8000")
-    print("📖 API Documentation: http://localhost:8000/docs")
+    print("📍 Server will be available at: https://content-generation-and-translation.streamlit.app/")
+    print("📖 API Documentation: https://content-generation-and-translation.streamlit.app/docs")
     
     uvicorn.run(
         "main:app",

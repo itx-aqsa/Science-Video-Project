@@ -9,7 +9,7 @@ def test_backend():
     
     # Test 1: Health Check
     try:
-        response = requests.get("http://localhost:8000/health")
+        response = requests.get("https://content-generation-and-translation.streamlit.app/health")
         if response.status_code == 200:
             print("✅ Health Check: PASSED")
             print(f"   Response: {response.json()}")
@@ -33,7 +33,7 @@ def test_backend():
         }
         
         response = requests.post(
-            "http://localhost:8000/generate-script",
+            "https://content-generation-and-translation.streamlit.app/generate-script",
             headers={"Content-Type": "application/json"},
             data=json.dumps(payload)
         )
@@ -63,7 +63,7 @@ def test_backend():
         }
         
         response = requests.post(
-            "http://localhost:8000/translate-script",
+            "https://content-generation-and-translation.streamlit.app/translate-script",
             headers={"Content-Type": "application/json"},
             data=json.dumps(payload)
         )
